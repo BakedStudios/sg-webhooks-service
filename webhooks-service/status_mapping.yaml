@@ -1,3 +1,63 @@
+version_statuses:
+  - key: na
+    label: N/A
+  - key: cnv
+    label: Check New Version
+  - key: bkdn
+    label: BKD Note
+  - key: stcomp
+    label: Step Completed
+  - key: sndwip
+    label: Send WIP
+  - key: sndcli
+    label: Sent to Client
+  - key: qckbk
+    label: QC Kickback
+  - key: rev
+    label: Pending Client Review
+  - key: note
+    label: Client Note
+  - key: hero
+    label: Hero Shot
+  - key: apv
+    label: Client Approved
+
+task_statuses:
+  - key: omt
+    label: Omit
+  - key: hld
+    label: On Hold
+  - key: wtg
+    label: Waiting to Start
+  - key: rdy
+    label: Ready to Start
+  - key: per
+    label: Pull Error
+  - key: ip
+    label: In Progress
+  - key: ncl
+    label: Needs Clarification
+  - key: ofr
+    label: Out For Roto/Paint
+  - key: bfr
+    label: Back From Roto/Paint
+  - key: cnv
+    label: Check New Version
+  - key: adn
+    label: Address New Notes
+  - key: stcomp
+    label: Step Completed
+  - key: sndcli
+    label: Send to Client
+  - key: qckbk
+    label: QC Kickback
+  - key: rev
+    label: Pending Client Review
+  - key: apv
+    label: Client Approved
+  - key: di
+    label: Delivered to DI
+
 shot_statuses:
   - key: omt
     label: Omit
@@ -22,93 +82,27 @@ shot_statuses:
   - key: final
     label: Final
 
-task_statuses:
-  - key: omt
-    label: Omit
-  - key: hld
-    label: On Hold
-  - key: wtg
-    label: Waiting to Start
-  - key: rdy
-    label: Ready to Start
-  - key: per
-    label: Pull Error
-  - key: ip
-    label: In Progress
-  - key: ncl
-    label: Needs Clarification
-  - key: ofr
-    label: Out For Roto/Paint
-  - key: bfr
-    label: Back From Roto/Paint
-  - key: stc
-    label: Step Completed
-  - key: cnv
-    label: Check New Version
-  - key: cli
-    label: Send to Client
-  - key: adn
-    label: Address New Notes
-  - key: qckbk
-    label: QC Clickback
-  - key: rev
-    label: Pending Client Review
-  - key: hires
-    label: Ready for HiRes
-  - key: dlh
-    label: Delivered HiRes
-  - key: di
-    label: Delivered to DI
-
-version_statuses:
-  - key: na
-    label: N/A
-  - key: cnv
-    label: Check New Version
-  - key: cli
-    label: Sent to Client
-  - key: bkdn
-    label: BKD Note
-  - key: qckbk
-    label: QC Kickback
-  - key: rev
-    label: Pending Client Review
-  - key: note
-    label: Client Note
-  - key: stc
-    label: Step Completed
-  - key: hero
-    label: Hero Shot
-  - key: apv
-    label: Client Approved
-
-shot_to_task:
-  omt:
-    - omt
-  bid:
-    - wtg
-  hld:
-    - hld
-  repull:
-    - wtg
-  media:
-    - wtg
-  awa:
-    - wtg
-  actv:
-    - rdy
-    - per
-    - ip
-    - ncl
-    - ofr
-    - bfr
-    - stc
+version_to_task:
+  cnv:
     - cnv
-    - cli
+  bkdn:
     - adn
+  stcomp:
+    - stcomp
+  sndwip:
+    - sndcli
+  sndcli:
+    - sndcli
+  qckbk:
     - qckbk
-  di:
-    - di
+  rev:
+    - rev
+  note:
+    - adn
+  hero:
+    - apv
+  apv:
+    - apv
 
 task_to_shot:
   omt:
@@ -127,11 +121,11 @@ task_to_shot:
     - actv
   bfr:
     - actv
-  stc:
-    - actv
   cnv:
     - actv
-  cli:
+  stcomp:
+    - actv
+  sndcli:
     - actv
   adn:
     - actv
@@ -139,27 +133,7 @@ task_to_shot:
     - actv
   rev:
     - rev
-  hires:
+  apv:
     - apv
   di:
     - di
-
-version_to_task:
-  cnv:
-    - cnv
-  cli:
-    - cli
-  bkdn:
-    - adn
-  qckbk:
-    - qckbk
-  rev:
-    - rev
-  note:
-    - adn
-  stc:
-    - stc
-  hero:
-    - hires
-  apv:
-    - hires
