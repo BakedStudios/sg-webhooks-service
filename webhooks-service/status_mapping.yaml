@@ -141,3 +141,7 @@ task_to_shot:
     - apv
   di:
     - di
+
+shot_to_task:
+  omt:
+    - omt
