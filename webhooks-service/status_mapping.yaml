@@ -21,6 +21,8 @@ version_statuses:
     label: Hero Shot
   - key: apv
     label: Client Approved
+  - key: pdrr
+    label: Pending Director Review
 
 task_statuses:
   - key: omt
@@ -103,6 +105,8 @@ version_to_task:
     - apv
   apv:
     - apv
+  pdrr:
+    - rev
 
 task_to_shot:
   omt:
