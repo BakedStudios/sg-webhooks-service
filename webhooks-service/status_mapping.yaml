@@ -7,6 +7,8 @@ version_statuses:
     label: BKD Note
   - key: stcomp
     label: Step Completed
+  - key: sndv0
+    label: Send v000
   - key: sndwip
     label: Send WIP
   - key: sndcli
@@ -39,6 +41,8 @@ task_statuses:
     label: In Progress
   - key: ncl
     label: Needs Clarification
+  - key: nwmdia
+    label: New Media
   - key: ofr
     label: Out For Roto/Paint
   - key: bfr
@@ -91,6 +95,7 @@ version_to_task:
     - adn
   stcomp:
     - stcomp
+  sndv0: -sndcli
   sndwip:
     - sndcli
   sndcli:
@@ -124,6 +129,8 @@ task_to_shot:
   ofr:
     - actv
   bfr:
+    - actv
+  nwmdia:
     - actv
   cnv:
     - actv
