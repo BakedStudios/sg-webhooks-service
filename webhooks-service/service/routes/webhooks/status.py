@@ -67,51 +67,27 @@ def handle_webhook():
 
 @bp.route("/shot", methods=("POST",))
 def handle_shot_status_change():
-    """
-    Receives e.g. the following JSON post body:
+    sg = SG()
 
-    {
-      "data": {
-        "id": "693322.80953.0",
-        "event_log_entry_id": 3635187,
-        "event_type": "Shotgun_Shot_Change",
-        "operation": "update",
-        "user": {
-          "type": "HumanUser",
-          "id": 1346
-        },
-        "entity": {
-          "type": "Shot",
-          "id": 20716
-        },
-        "project": {
-          "type": "Project",
-          "id": 2817
-        },
-        "meta": {
-          "type": "attribute_change",
-          "attribute_name": "sg_status_list",
-          "entity_type": "Shot",
-          "entity_id": 20716,
-          "field_data_type": "status_list",
-          "old_value": "omt",
-          "new_value": "actv"
-        },
-        "created_at": "2023-04-22 21:13:51.550053",
-        "attribute_name": "sg_status_list",
-        "session_uuid": "85d7a282-e152-11ed-b7ea-0242ac110002",
-        "delivery_id": "fe37d91a-fc99-4d9e-acb2-2a4b855348ba"
-      },
-      "timestamp": "2023-04-22T21:14:43Z"
-    }
-    """
     shot_id = g.webhook.data.entity.id
     project_id = g.webhook.data.project.id
+    user_id = g.webhook.data.user.id
+
+    shot = sg.find_one("Shot", [["id", "is", shot_id]], ["code"])
+    shot_name = shot["code"] if shot else f"Shot {shot_id}"
+
+    project = sg.find_one("Project", [["id", "is", project_id]], ["name"])
+    project_name = project["name"] if project else f"Project {project_id}"
+
+    user = sg.find_one("HumanUser", [["id", "is", user_id]], ["name"])
+    user_name = user["name"] if user else f"User {user_id}"
+
     old_shot_status = g.webhook.data.meta.old_value
     new_shot_status = g.webhook.data.meta.new_value
+
     logger.info(
-        f'Shot {shot_id} was updated from status "{old_shot_status}" to '
-        f'"{new_shot_status}" in project {project_id}.'
+        f'User "{user_name}" updated Shot "{shot_name}" from status "{old_shot_status}" '
+        f'to "{new_shot_status}" in project "{project_name}".'
     )
 
     try:
@@ -139,8 +115,9 @@ def handle_shot_status_change():
     now = datetime.now(timezone.utc)
     delay_seconds = (now - g.webhook.timestamp).total_seconds()
     return {
-        "project_id": project_id,
-        "shot_id": shot_id,
+        "project_name": project_name,
+        "shot_name": shot_name,
+        "user_name": user_name,
         "lag_after_original_event_ms": int(delay_seconds * 1000),
         "old_shot_status": old_shot_status,
         "new_shot_status": new_shot_status,
@@ -148,54 +125,29 @@ def handle_shot_status_change():
         "updated_tasks": updated_tasks,
     }, 200
 
-
 @bp.route("/task", methods=("POST",))
 def handle_task_status_change():
-    """
-    Receives e.g. the following JSON post body:
+    sg = SG()
 
-    {
-      "data": {
-        "id": "702994.82192.0",
-        "event_log_entry_id": 3674504,
-        "event_type": "Shotgun_Task_Change",
-        "operation": "update",
-        "user": {
-          "type": "HumanUser",
-          "id": 1346
-        },
-        "entity": {
-          "type": "Task",
-          "id": 23802
-        },
-        "project": {
-          "type": "Project",
-          "id": 2817
-        },
-        "meta": {
-          "type": "attribute_change",
-          "attribute_name": "sg_status_list",
-          "entity_type": "Task",
-          "entity_id": 23802,
-          "field_data_type": "status_list",
-          "old_value": "di",
-          "new_value": "rdy"
-        },
-        "created_at": "2023-04-30 15:49:00.426711",
-        "attribute_name": "sg_status_list",
-        "session_uuid": "32046296-e76d-11ed-ba10-0242ac110003",
-        "delivery_id": "c5591b71-7a59-4326-8579-a9e2dd32b8f4"
-      },
-      "timestamp": "2023-04-30T15:49:01Z"
-    }
-    """
     task_id = g.webhook.data.entity.id
     project_id = g.webhook.data.project.id
+    user_id = g.webhook.data.user.id  # 👈 Get user ID
+
+    task = sg.find_one("Task", [["id", "is", task_id]], ["content"])
+    task_name = task["content"] if task else f"Task {task_id}"
+
+    project = sg.find_one("Project", [["id", "is", project_id]], ["name"])
+    project_name = project["name"] if project else f"Project {project_id}"
+
+    user = sg.find_one("HumanUser", [["id", "is", user_id]], ["name"])
+    user_name = user["name"] if user else f"User {user_id}"
+
     old_task_status = g.webhook.data.meta.old_value
     new_task_status = g.webhook.data.meta.new_value
+
     logger.info(
-        f'Task {task_id} was updated from status "{old_task_status}" to '
-        f'"{new_task_status}" in project {project_id}.'
+        f'User "{user_name}" updated Task "{task_name}" from status "{old_task_status}" '
+        f'to "{new_task_status}" in project "{project_name}".'
     )
 
     try:
@@ -226,8 +178,9 @@ def handle_task_status_change():
     now = datetime.now(timezone.utc)
     delay_second = (now - g.webhook.timestamp).total_seconds()
     return {
-        "project_id": project_id,
-        "task_id": task_id,
+        "project_name": project_name,
+        "task_name": task_name,
+        "user_name": user_name,  # 👈 Include user name in response
         "lag_after_original_event_ms": int(delay_second * 1000),
         "old_task_status": old_task_status,
         "new_task_status": new_task_status,
@@ -236,51 +189,30 @@ def handle_task_status_change():
     }, 200
 
 
+
 @bp.route("/version", methods=("POST",))
 def handle_version_status_change():
-    """
-    {
-      "data": {
-        "id": "771230.141915.0",
-        "meta": {
-          "type": "attribute_change",
-          "entity_id": 46898,
-          "new_value": "note",
-          "old_value": "cnv",
-          "entity_type": "Version",
-          "attribute_name": "sg_status_list",
-          "field_data_type": "status_list"
-        },
-        "user": {
-          "id": 1346,
-          "type": "HumanUser"
-        },
-        "entity": {
-          "id": 46898,
-          "type": "Version"
-        },
-        "project": {
-          "id": 2817,
-          "type": "Project"
-        },
-        "operation": "update",
-        "created_at": "2023-05-22 17:40:39.834737",
-        "event_type": "Shotgun_Version_Change",
-        "delivery_id": "222d1fd2-07b9-4225-a696-e4c617de8e8d",
-        "session_uuid": "bb303728-f8c7-11ed-9945-0242ac110004",
-        "attribute_name": "sg_status_list",
-        "event_log_entry_id": 3842748
-      },
-      "timestamp": "2023-05-22T17:40:40Z"
-    }
-    """
+    sg = SG()
+
     version_id = g.webhook.data.entity.id
     project_id = g.webhook.data.project.id
+    user_id = g.webhook.data.user.id
+
+    version = sg.find_one("Version", [["id", "is", version_id]], ["code"])
+    version_name = version["code"] if version else f"Version {version_id}"
+
+    project = sg.find_one("Project", [["id", "is", project_id]], ["name"])
+    project_name = project["name"] if project else f"Project {project_id}"
+
+    user = sg.find_one("HumanUser", [["id", "is", user_id]], ["name"])
+    user_name = user["name"] if user else f"User {user_id}"
+
     old_version_status = g.webhook.data.meta.old_value
     new_version_status = g.webhook.data.meta.new_value
+
     logger.info(
-        f'Version {version_id} was updated from status "{old_version_status}" to '
-        f'"{new_version_status}" in project {project_id}.'
+        f'User "{user_name}" updated Version "{version_name}" from status "{old_version_status}" '
+        f'to "{new_version_status}" in project "{project_name}".'
     )
 
     try:
@@ -324,19 +256,18 @@ def handle_version_status_change():
             else:
                 logger.info("Updated linked shot.")
 
-
     now = datetime.now(timezone.utc)
     delay_second = (now - g.webhook.timestamp).total_seconds()
     return {
-        "project_id": project_id,
-        "version_id": version_id,
+        "project_name": project_name,
+        "version_name": version_name,
+        "user_name": user_name,
         "lag_after_original_event_ms": int(delay_second * 1000),
         "old_version_status": old_version_status,
         "new_version_status": new_version_status,
         "original_task": original_task,
         "updated_task": updated_task,
     }, 200
-
 
 @bp.route("/version-created", methods=("POST",))
 def handle_version_created():
