@@ -191,6 +191,27 @@ def handle_task_status_change():
     """
     task_id = g.webhook.data.entity.id
     project_id = g.webhook.data.project.id
+<<<<<<< Updated upstream
+=======
+    user_id = g.webhook.data.user.id
+
+    # 👇 Fetch step info for cross-step logic
+    task = sg.find_one(
+        "Task",
+        [["id", "is", task_id]],
+        ["content", "step.Step.short_name", "entity"]
+    )
+    task_name = task["content"] if task else f"Task {task_id}"
+    step_short_name = task.get("step.Step.short_name")
+    linked_shot = task.get("entity")
+
+    project = sg.find_one("Project", [["id", "is", project_id]], ["name"])
+    project_name = project["name"] if project else f"Project {project_id}"
+
+    user = sg.find_one("HumanUser", [["id", "is", user_id]], ["name"])
+    user_name = user["name"] if user else f"User {user_id}"
+
+>>>>>>> Stashed changes
     old_task_status = g.webhook.data.meta.old_value
     new_task_status = g.webhook.data.meta.new_value
     logger.info(
@@ -198,44 +219,89 @@ def handle_task_status_change():
         f'"{new_task_status}" in project {project_id}.'
     )
 
-    try:
-        shot_statuses = current_app.config["STATUS_MAPPING"].map_task_status(
-            new_task_status
-        )
-    except UnknownStatusError as e:
-        return unknown_status_error_response(e), 400
+    # 🔒 Only allow COMP tasks to affect shot status
+    if step_short_name == "COMP":
+        try:
+            shot_statuses = current_app.config["STATUS_MAPPING"].map_task_status(
+                new_task_status
+            )
+        except UnknownStatusError as e:
+            return unknown_status_error_response(e), 400
 
-    if not shot_statuses:
-        logger.info("Status not mapped to anything.")
-        return "", 204
-
-    logger.info(
-        "Updating linked shot to a status that is one of: "
-        + ", ".join(shot_statuses)
-    )
-
-    original_shot, updated_shot = update_linked_shot(
-        project_id, task_id, shot_statuses,
-    )
-
-    if updated_shot is None:
-        logger.info("Linked shot did not need to be changed.")
+        if not shot_statuses:
+            logger.info("Status not mapped to anything.")
+        else:
+            logger.info(
+                "Updating linked shot to a status that is one of: "
+                + ", ".join(shot_statuses)
+            )
+            original_shot, updated_shot = update_linked_shot(
+                project_id, task_id, shot_statuses,
+            )
+            if updated_shot is None:
+                logger.info("Linked shot did not need to be changed.")
+            else:
+                logger.info("Updated linked shot.")
     else:
-        logger.info("Updated linked shot.")
+        logger.info(
+            f"Shot status will not be updated since task is in step '{step_short_name}'."
+        )
+
+    # 🔁 Cross-step Task-to-Task updates
+    step_to_step_mapping = current_app.config["STATUS_MAPPING"].step_to_step
+    target_steps = step_to_step_mapping.get(step_short_name, {}).get(new_task_status)
+    if target_steps and linked_shot:
+        logger.info(
+            f"Task in step '{step_short_name}' with status '{new_task_status}' "
+            f"triggers updates to tasks in step(s): {list(target_steps.keys())}"
+        )
+
+        # Find tasks on the same shot
+        shot_tasks = sg.find(
+            "Task",
+            [
+                ["entity", "is", linked_shot],
+                ["step.Step.short_name", "in", list(target_steps.keys())]
+            ],
+            ["id", "step.Step.short_name", "sg_status_list"]
+        )
+
+        for target_task in shot_tasks:
+            target_step_name = target_task["step.Step.short_name"]
+            new_target_status = target_steps[target_step_name]
+            sg.update(
+                "Task",
+                target_task["id"],
+                {"sg_status_list": new_target_status}
+            )
+            logger.info(
+                f"Updated task {target_task['id']} in step '{target_step_name}' "
+                f"to status '{new_target_status}'."
+            )
+    else:
+        logger.info("No cross-step task updates required.")
 
     now = datetime.now(timezone.utc)
-    delay_second = (now - g.webhook.timestamp).total_seconds()
+    delay_seconds = (now - g.webhook.timestamp).total_seconds()
     return {
+<<<<<<< Updated upstream
         "project_id": project_id,
         "task_id": task_id,
         "lag_after_original_event_ms": int(delay_second * 1000),
+=======
+        "project_name": project_name,
+        "task_name": task_name,
+        "user_name": user_name,
+        "lag_after_original_event_ms": int(delay_seconds * 1000),
+>>>>>>> Stashed changes
         "old_task_status": old_task_status,
         "new_task_status": new_task_status,
-        "original_shot": original_shot,
-        "updated_shot": updated_shot,
     }, 200
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 @bp.route("/version", methods=("POST",))
 def handle_version_status_change():
     """
